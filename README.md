@@ -1,2 +1,2 @@
 # Runescape_Combat_Bot
-Runescape Combat Bot created by myself and [datosh](https://github.com/) using the OSBot API.
+Runescape Combat Bot created by [datosh](https://github.com/) and myself using the (OSBot API)[http://osbot.org/api/].
