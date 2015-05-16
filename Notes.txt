@@ -1,0 +1,22 @@
+Notes for Runescape Combat Bot:
+
+
+To do list:
+  - Fix bugs
+  - Make the GUI more asthetically appealing
+  - Change default target to user input
+  - Change default lootable items to user input
+  - Change default bury bones to user input
+  - Add option to bank at starter town (Lumbridge bank located on the 3rd floor of the castle)
+  - Add anti-ban features (Ex: Check skills, look at friends list, etc..)
+  
+  
+Potential feature ideas:
+  - Add a "Gold Earned: " counter with the value of items looted.
+  - Add a "Total items looted: " counter
+  - Add a "Total targets slain: " counter
+  - Add ability to eat food when health is low and then go to the bank to get more food upon running out.
+  
+  
+Bug list:
+  - Bot attempts to attack creatures currently already under attack.
