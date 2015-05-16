@@ -1,23 +1,39 @@
+import org.osbot.rs07.api.ui.Skill;
 import org.osbot.rs07.api.model.GroundItem;
 import org.osbot.rs07.api.model.Item;
 import org.osbot.rs07.api.model.NPC;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.script.ScriptManifest;
  
+
 import java.awt.*;
+import java.util.concurrent.TimeUnit;
  
-@ScriptManifest(author = "Vale and Datosh", info = "Basic Combat Bot", name = "Vatosh Combat Bot", version = 0.3, logo = "")
+@ScriptManifest(author = "Vale and Datosh", info = "Basic Combat Bot", name = "Vatosh Combat Bot", version = 0.5, logo = "")
 public class main extends Script {
        
 		private final boolean DEBUG = true;
         private State currentState = State.IDLE;
+        private long timeBegan, timeRan;
+        private long totalBeginningXP, totalCurrentXP, totalXPGained;
+        private long beginningAttackXP, currentAttackXP, attackXPGained;
+        private long beginningDefenceXP, currentDefenceXP, defenceXPGained;
+        private long beginningStrengthXP, currentStrengthXP, strengthXPGained;
+        private long beginningHitpointsXP, currentHitpointsXP, hitpointsXPGained;
+        private long beginningPrayerXP, currentPrayerXP, prayerXPGained;
         private NPC target;
         private GroundItem bones, feather;
-        int killCount = 0;
        
         @Override
         public void onStart() {
                 log("Let's get started!");
+                timeBegan = System.currentTimeMillis(); // Begin recording bot runtime.
+                beginningAttackXP = skills.getExperience(Skill.ATTACK);
+                beginningDefenceXP = skills.getExperience(Skill.DEFENCE);
+                beginningStrengthXP = skills.getExperience(Skill.STRENGTH);
+                beginningHitpointsXP = skills.getExperience(Skill.HITPOINTS);
+                beginningPrayerXP = skills.getExperience(Skill.PRAYER);
+                totalBeginningXP = beginningAttackXP + beginningDefenceXP + beginningStrengthXP + beginningHitpointsXP + beginningPrayerXP;
         }
        
         @Override
@@ -25,8 +41,8 @@ public class main extends Script {
                
                 switch (currentState) {
                 case IDLE:
-                        // Try to get the next chicken. If we found one switch to the fighting
-                        // state. If we don't sleep and try on next loop again
+                        // Try to get the next target. If one is found switch to the fighting
+                        // state. If none found sleep and try again next loop.
                 		target = npcs.closest("Chicken"); // Change "Chicken" to user-input (So they can enter Goblin, cow, etc.)
                         if(target != null) {
                                 currentState = State.FIGHT;
@@ -36,8 +52,7 @@ public class main extends Script {
                        
                         break;
                 case FIGHT:
- 
-                        // Do we still have a valid chicken object?
+                        // Check that target is still a valid object.
                         if(target == null) {
                                 currentState = State.IDLE;
                         }
@@ -51,15 +66,12 @@ public class main extends Script {
                         }
                        
                         if(target.getHealth() == 0) {
-                                killCount += 1;
-                                //log("You have killed: <killCount> targets.");
                                 target = null;
                                 currentState = State.LOOT;
                         }
-                       
                         break;
                 case LOOT:
-                    
+                	
                     if(DEBUG) {
                             log("Entered LOOT");
                     }
@@ -73,7 +85,7 @@ public class main extends Script {
                             currentState = State.CLEAR_INVENTORY;
                     }
                    
-                 // Check for near feathers
+                    // Check for near feathers
                     feather = groundItems.closest("Feather");
                     if(!inventory.isFull()) {
                             feather.interact("Take");
@@ -81,8 +93,6 @@ public class main extends Script {
                     } else {
                             currentState = State.CLEAR_INVENTORY;
                     }
-                    
-                    // Go back to idle
                     currentState = State.BURY;                   
                     break;
                     
@@ -140,9 +150,55 @@ public class main extends Script {
         public void onPaint(Graphics2D g) {
         	//Loading paint
     		super.onPaint(g);
+    		timeRan = System.currentTimeMillis() - this.timeBegan;
+    		currentAttackXP = skills.getExperience(Skill.ATTACK);
+    		currentDefenceXP = skills.getExperience(Skill.DEFENCE);
+    		currentStrengthXP = skills.getExperience(Skill.STRENGTH);
+    		currentHitpointsXP = skills.getExperience(Skill.HITPOINTS);
+    		currentPrayerXP = skills.getExperience(Skill.PRAYER);
+    		totalCurrentXP = currentAttackXP + currentDefenceXP + currentStrengthXP + currentHitpointsXP + currentPrayerXP;
+    		
+    		attackXPGained = currentAttackXP - beginningAttackXP;
+    		defenceXPGained = currentDefenceXP - beginningDefenceXP;
+    		strengthXPGained = currentStrengthXP - beginningStrengthXP;
+    		hitpointsXPGained = currentHitpointsXP - beginningHitpointsXP;
+    		prayerXPGained = currentPrayerXP - beginningPrayerXP;
+    		totalXPGained = totalCurrentXP - totalBeginningXP;
+    		
     		g.setColor(Color.GREEN);
-    		g.drawString("Vatosh Combat Bot v0.3", 5, 290);
+    		g.drawString("Vatosh Combat Bot v0.5", 5, 290);
+    		g.setColor(Color.RED);
+    		g.drawString("Runtime: " + ft(timeRan), 5, 304);
+    		g.drawString("Total XP Earned: " + totalXPGained, 5, 318);
+    		
+    		g.setColor(Color.YELLOW);
+    		g.drawString("Attack XP Earned: " + attackXPGained, 320, 20);
+    		g.drawString("Defence XP Earned: " + defenceXPGained, 320, 34);
+    		g.drawString("Strength XP Earned: " + strengthXPGained, 320, 48);
+    		g.drawString("Hitpoints XP Earned: " + hitpointsXPGained, 320, 62);
+    		g.drawString("Prayer XP Earned: " + prayerXPGained, 320, 76);
         }
+        
+        private String ft(long duration)
+		{
+        	// Used to convert the runtime of the bot to a readable amount.
+			String res = "";
+			long days = TimeUnit.MILLISECONDS.toDays(duration);
+			long hours = TimeUnit.MILLISECONDS.toHours(duration)
+			- TimeUnit.DAYS.toHours(TimeUnit.MILLISECONDS.toDays(duration));
+			long minutes = TimeUnit.MILLISECONDS.toMinutes(duration)
+			- TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS
+			.toHours(duration));
+			long seconds = TimeUnit.MILLISECONDS.toSeconds(duration)
+			- TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS
+			.toMinutes(duration));
+			if (days == 0) {
+			res = (hours + ":" + minutes + ":" + seconds);
+			} else {
+			res = (days + ":" + hours + ":" + minutes + ":" + seconds);
+			}
+			return res;
+		} 
        
         private enum State {
                 FIGHT, LOOT, BURY, IDLE, CLEAR_INVENTORY,
