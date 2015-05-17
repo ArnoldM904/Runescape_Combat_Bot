@@ -4,15 +4,15 @@ import org.osbot.rs07.api.model.Item;
 import org.osbot.rs07.api.model.NPC;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.script.ScriptManifest;
- 
+
 
 import java.awt.*;
 import java.util.concurrent.TimeUnit;
  
-@ScriptManifest(author = "Vale and Datosh", info = "Basic Combat Bot", name = "Vatosh Combat Bot", version = 0.5, logo = "")
+@ScriptManifest(author = "Vale and Datosh", info = "Basic Combat Bot", name = "Vatosh Combat Bot", version = 0.53, logo = "")
 public class main extends Script {
        
-		private final boolean DEBUG = true;
+	private final boolean DEBUG = true;
         private State currentState = State.IDLE;
         private long timeBegan, timeRan;
         private long totalBeginningXP, totalCurrentXP, totalXPGained;
@@ -22,8 +22,9 @@ public class main extends Script {
         private long beginningHitpointsXP, currentHitpointsXP, hitpointsXPGained;
         private long beginningPrayerXP, currentPrayerXP, prayerXPGained;
         private NPC target;
-        private GroundItem bones, feather;
+        //private GroundItem feather;
        
+       // Begin program and record initial data.
         @Override
         public void onStart() {
                 log("Let's get started!");
@@ -35,15 +36,59 @@ public class main extends Script {
                 beginningPrayerXP = skills.getExperience(Skill.PRAYER);
                 totalBeginningXP = beginningAttackXP + beginningDefenceXP + beginningStrengthXP + beginningHitpointsXP + beginningPrayerXP;
         }
-       
+    
+        /*
+        * Currently not working.
+        public void antiBan() throws InterruptedException {
+        	if (random(0,30) == 1) {
+        		switch(random(0, 7)) {
+        		case 0:
+        			this.client.rotateCameraPitch(gRandom(55,5));
+        			log("Rotating camera (AntiBan)");
+        			break;
+        		case 1:
+        			this.openTab(Tab.SKILLS);
+        			log("Checking other tabs (AntiBan)");
+        			break;
+        		case 2:
+        			this.openTab(Tab.FRIENDS);
+        			log("Checking other tabs (AntiBan)");
+        			break;
+        		case 3:
+        			this.client.rotateCameraToAngle(140 + random(25 + 80));
+        			log("Rotating camera (AntiBan)");
+        			break;
+        		case 4:
+        			this.client.rotateCameraPitch(gRandom(50, 30));
+        			log("Rotating camera (AntiBan)");
+        			break;
+        		case 5:
+        			this.client.openTab(Tab.INVENTORY);
+        			log("Checking other tabs (AntiBan)");
+        			break;
+        		case 6:
+        			this.client.moveMouseOutsideScreen();
+        			log("Moving mouse outside screen (AntiBan)");
+        			sleep(random(5000, 10000));
+        		}
+        	}
+        }
+        */
+        
         @Override
         public int onLoop() throws InterruptedException {
                
+        	/* Currently not working.
+	        	if (myPlayer().isAnimating()) {
+					antiBan();
+				}
+			*/
+        	
                 switch (currentState) {
                 case IDLE:
                         // Try to get the next target. If one is found switch to the fighting
                         // state. If none found sleep and try again next loop.
-                		target = npcs.closest("Chicken"); // Change "Chicken" to user-input (So they can enter Goblin, cow, etc.)
+                		target = npcs.closest("Barbarian"); // Change to user-input (So they can enter Goblin, cow, etc.)
                         if(target != null) {
                                 currentState = State.FIGHT;
                         } else {
@@ -58,7 +103,7 @@ public class main extends Script {
                         }
                        
                         // Attack or turn camera
-                        if(!myPlayer().isAnimating() && !myPlayer().isMoving()) {
+                        if(!myPlayer().isAnimating() && !myPlayer().isMoving() && !target.isUnderAttack()) {
                         	target.interact("Attack");
                                 sleep(random(1300, 1800));
                         } else {
@@ -70,75 +115,39 @@ public class main extends Script {
                                 currentState = State.LOOT;
                         }
                         break;
+                // Make loot a togglable option.
                 case LOOT:
                 	
                     if(DEBUG) {
                             log("Entered LOOT");
                     }
                    
-                    // Check for near bones
-                    bones = groundItems.closest("Bones");
-                    if(!inventory.isFull()) {
-                            bones.interact("Take");
-                            sleep(random(100, 200));
-                    } else {
-                            currentState = State.CLEAR_INVENTORY;
+                    GroundItem groundBones = groundItems.closest("Bones");
+        	    Item bones = inventory.getItem("Bones");
+        	    if ((!inventory.isFull() && !myPlayer().isUnderAttack())) {
+        	    	groundBones.interact("Take");
+        		sleep(random(800, 1200));
+        		bones.interact("Bury");
+        		currentState = State.IDLE;
+        		} else {
+        			log("Full inventory. Exiting program.");
+                            	onExit();
                     }
-                   
+        	    /*
+        	    * Add this feature for any user input, not just feathers.
                     // Check for near feathers
                     feather = groundItems.closest("Feather");
                     if(!inventory.isFull()) {
                             feather.interact("Take");
                             sleep(random(100, 200));
                     } else {
-                            currentState = State.CLEAR_INVENTORY;
+                    	    log("Full inventory. Exiting program.");
+                            onExit();
                     }
-                    currentState = State.BURY;                   
+                    */
                     break;
-                    
-            case CLEAR_INVENTORY:
-                   
-                    if(DEBUG) {
-                            log("Entered CLEAR_INVENTORY");
-                    }
-                    inventory.dropAllExcept("Bones", "Feather");
-                    currentState = State.IDLE;
-                    break;
-                    
-            case BURY:
-                
-                if(DEBUG) {
-                        log("Entered BURY");
                 }
-               
-                Item items[] = this.getInventory().getItems();
-                for(Item i : items) {
-                       
-                        if(i == null) {
-                                continue;
-                        }
-                       
-                        if(DEBUG) {
-                                log(i.toString() + " " + i.getName());                                 
-                        }
-                       
-                        if(i.getName().equals("Bones")) {
-                               
-                                if(DEBUG) {
-                                        log("try to bury bones");
-                                }
-                               
-                                i.interact("Bury");
-                                sleep(random(600, 1000));
-                        }
-                }
-                currentState = State.IDLE;
-                break;
- 
-                default:
-                        break;
-                }
-                return random(200, 300);
+		return random(200, 300);
         }
        
         @Override
@@ -146,6 +155,7 @@ public class main extends Script {
                 log("Thanks for running our script!");
         }
        
+       // Paint graphical representation of data for the user.
         @Override
         public void onPaint(Graphics2D g) {
         	//Loading paint
@@ -166,7 +176,7 @@ public class main extends Script {
     		totalXPGained = totalCurrentXP - totalBeginningXP;
     		
     		g.setColor(Color.GREEN);
-    		g.drawString("Vatosh Combat Bot v0.5", 5, 290);
+    		g.drawString("Vatosh Combat Bot v0.53", 5, 290);
     		g.setColor(Color.RED);
     		g.drawString("Runtime: " + ft(timeRan), 5, 304);
     		g.drawString("Total XP Earned: " + totalXPGained, 5, 318);
@@ -201,6 +211,6 @@ public class main extends Script {
 		} 
        
         private enum State {
-                FIGHT, LOOT, BURY, IDLE, CLEAR_INVENTORY,
+                FIGHT, LOOT, IDLE,
         }
 }
