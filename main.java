@@ -36,53 +36,9 @@ public class main extends Script {
                 beginningPrayerXP = skills.getExperience(Skill.PRAYER);
                 totalBeginningXP = beginningAttackXP + beginningDefenceXP + beginningStrengthXP + beginningHitpointsXP + beginningPrayerXP;
         }
-    
-        /*
-        * Currently not working.
-        public void antiBan() throws InterruptedException {
-        	if (random(0,30) == 1) {
-        		switch(random(0, 7)) {
-        		case 0:
-        			this.client.rotateCameraPitch(gRandom(55,5));
-        			log("Rotating camera (AntiBan)");
-        			break;
-        		case 1:
-        			this.openTab(Tab.SKILLS);
-        			log("Checking other tabs (AntiBan)");
-        			break;
-        		case 2:
-        			this.openTab(Tab.FRIENDS);
-        			log("Checking other tabs (AntiBan)");
-        			break;
-        		case 3:
-        			this.client.rotateCameraToAngle(140 + random(25 + 80));
-        			log("Rotating camera (AntiBan)");
-        			break;
-        		case 4:
-        			this.client.rotateCameraPitch(gRandom(50, 30));
-        			log("Rotating camera (AntiBan)");
-        			break;
-        		case 5:
-        			this.client.openTab(Tab.INVENTORY);
-        			log("Checking other tabs (AntiBan)");
-        			break;
-        		case 6:
-        			this.client.moveMouseOutsideScreen();
-        			log("Moving mouse outside screen (AntiBan)");
-        			sleep(random(5000, 10000));
-        		}
-        	}
-        }
-        */
-        
+
         @Override
         public int onLoop() throws InterruptedException {
-               
-        	/* Currently not working.
-	        	if (myPlayer().isAnimating()) {
-					antiBan();
-				}
-			*/
         	
                 switch (currentState) {
                 case IDLE:
